@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Appliquer la classe dark-mode le plus tôt possible
+        if (localStorage.getItem("darkModeActif") === "true") {
+            document.documentElement.classList.add("dark-mode");
+        }
+
+        const tailleTexte = localStorage.getItem("tailleTexte");
+        if (tailleTexte) {
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.style.fontSize = tailleTexte;
+            });
+        }
+
+        const savedFuseau = localStorage.getItem("fuseauHoraire");
+        const notifEmail = localStorage.getItem("notifEmail");
+
+    </script>
+    <title>Accueil | Green Pulse</title>
+
+    <!-- Bootstrap 5 + Styles -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+
+    <!-- Scripts Bootstrap/jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+
+        body {
+            background-color: #f8f9fa; /* fond clair de Bootstrap par défaut */
+        }
+
+        .carousel-inner,
+        .carousel-section {
+            background-color: #ffffff;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .dark-mode body {
+            background-color: #121212 !important;
+            color: #ffffff;
+        }
+
+        .dark-mode .bg-light {
+            background-color: #1e1e1e !important;
+        }
+
+        .dark-mode .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .dark-mode .text-white {
+            color: #ffffff;
+        }
+
+        .dark-mode .text-center {
+            text-align: center;
+        }
+
+        .dark-mode .btn-light {
+            background-color: #444;
+            border-color: #555;
+            color: #ffffff;
+        }
+
+        .dark-mode .btn-light:hover {
+            background-color: #666;
+            border-color: #777;
+        }
+
+        .dark-mode .card,
+        .dark-mode .list-group-item,
+        .dark-mode .navbar,
+        .dark-mode .footer,
+        .dark-mode .alert {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border-color: #333;
+        }
+
+        .dark-mode a {
+            color: #80cbc4;
+        }
+
+        .dark-mode .section-title {
+            color: #ffffff;
+        }
+
+        .dark-mode .dark-mode-btn {
+            background-color: #444;
+            border-color: #555;
+            color: #ffffff;
+        }
+
+        .dark-mode .dark-mode-btn:hover {
+            background-color: #666;
+            border-color: #777;
+        }
+
+
+        .dark-mode .carousel-inner{
+            background-color: #373737;
+        }
+        .dark-mode .carousel-section {
+            background-color: #1e1e1e !important;
+        }
+
+    </style>
+
+</head>
+
+<body class="bg-light">
+
+<div class="container-fluid">
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+        <a class="navbar-brand" th:href="@{/}">
+            <img src="/images/greenpulseexport.jpeg" class="logo" alt="Green Pulse" height="40">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}">Accueil</a>
+                </li>
+
+                <!-- Lien vers le Dashboard pour les utilisateurs connectés -->
+                <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                    <a class="nav-link" th:href="@{/dashboard}">Tableau de bord</a>
+                </li>
+
+                <!-- Utilisateur non connecté -->
+                <li class="nav-item" th:if="${utilisateurConnecte == null}">
+                    <a class="nav-link" th:href="@{/connexion}">Connexion</a>
+                </li>
+                <li class="nav-item" th:if="${utilisateurConnecte == null}">
+                    <a class="nav-link" th:href="@{/utilisateurs/new}">Inscription</a>
+                </li>
+
+                <!-- Utilisateur connecté -->
+                <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                    <a class="nav-link fw-bold text-white" th:href="@{/profil}">
+                        <span th:text="${utilisateurConnecte.prenom}">Mon Profil</span>
+                    </a>
+                </li>
+
+                <!-- Lien vers la liste des produits pour Acheteur et Producteur -->
+                <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                    <a class="nav-link" th:href="@{/produits}">Liste des Produits</a>
+                </li>
+
+                <!-- Lien vers le panier visible pour les acheteurs -->
+                <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Acheteur'}">
+                    <a class="nav-link" th:href="@{/ajouterAuPanier/Produit}">Mon Panier</a>
+                </li>
+
+                <!-- Administrateur -->
+                <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Administrateur'}">
+                    <a class="nav-link" th:href="@{/utilisateurs}">Utilisateurs</a>
+                </li>
+
+                <!-- Lien Ajouter un Produit visible uniquement pour les producteurs -->
+                <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Producteur'}">
+                    <a class="nav-link" href="/ajouterProduit">Ajouter un Produit</a>
+                </li>
+                <!-- Lien Messagerie-->
+                <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                    <a class="nav-link" th:href="@{/EnvoyerMessages}">Messagerie</a>
+                </li>
+
+                <!-- Déconnexion -->
+                <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                    <a class="nav-link" th:href="@{/deconnexion}">Déconnexion</a>
+                </li>
+
+                <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                    <a th:href="@{/parametres}" class="fa-solid fa-gear fa-2x"></a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION avec animation -->
+    <section class="hero bg-success text-white text-center py-5 fade-in">
+        <div class="container">
+            <h1 class="display-4">Green Pulse</h1>
+            <p class="lead">Pour un avenir plus vert et équitable.</p>
+        </div>
+    </section>
+
+    <!-- CAROUSEL -->
+    <section class="carousel-section py-5 bg-white fade-in">
+        <div class="container">
+            <div id="carouselGreenPulse" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3300">
+                <div class="carousel-inner rounded shadow">
+                    <div class="carousel-item active">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <img src="/images/countryside-2326787_1920.jpg" height="400" class="d-block w-100" alt="Graines de chia">
+                            </div>
+                            <div class="col-md-6">
+                                <img src="/images/crop-2229_1920.jpg" height="400" class="d-block w-100" alt="Des graines">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <img src="/images/women-9152739_1280.jpg" height="400" class="d-block w-100" alt="Des graines">
+                            </div>
+                            <div class="col-md-6">
+                                <img src="/images/corn-3663086_1280.jpg" height="400" class="d-block w-100" alt="Graines de chia">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselGreenPulse" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Précédent</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselGreenPulse" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Suivant</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- OBJECTIFS -->
+    <section class="container text-center my-5 fade-in">
+        <h2 class="section-title">Nos Objectifs</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <h5>Vente Directe</h5>
+                <p>Mettre en relation producteurs et acheteurs sans intermédiaires coûteux.</p>
+            </div>
+            <div class="col-md-4">
+                <h5>Prix Justes & Transparents</h5>
+                <p>Offrir aux producteurs le pouvoir de fixer leurs prix et d’analyser les tendances.</p>
+            </div>
+            <div class="col-md-4">
+                <h5>Automatisation Intelligente</h5>
+                <p>Gérer les offres, les transactions et la logistique grâce à des outils performants.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- AVANTAGES -->
+    <section class="bg-light py-5 fade-in">
+        <div class="container">
+            <h2 class="text-center section-title">Pourquoi Green Pulse ?</h2>
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <h6>Marché Canadien en Tête</h6>
+                    <p>Le Canada est le leader mondial des légumineuses — Green Pulse valorise ce potentiel.</p>
+                </div>
+                <div class="col-md-3">
+                    <h6>Connexion Internationale</h6>
+                    <p>Faciliter les échanges avec les acheteurs à travers le monde.</p>
+                </div>
+                <div class="col-md-3">
+                    <h6>Interface Multilingue</h6>
+                    <p>Accessible en plusieurs langues pour soutenir la portée mondiale.</p>
+                </div>
+                <div class="col-md-3">
+                    <h6>Suivi Logistique</h6>
+                    <p>Suivi clair des stocks, des offres, et des livraisons.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CALL TO ACTION -->
+    <section class="text-center py-5 bg-success text-white fade-in" th:if="${utilisateurConnecte == null}">
+        <div class="container">
+            <h2>Rejoignez la Révolution Verte</h2>
+            <p>Inscrivez-vous pour vendre ou acheter des légumineuses canadiennes, de façon moderne et équitable.</p>
+            <a href="/utilisateurs/new" class="btn btn-light btn-lg m-2">Créer un compte</a>
+            <span class="d-block my-2 fw-bold">ou</span>
+            <a href="/connexion" class="btn btn-light btn-lg m-2">Connectez-vous</a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer text-center bg-dark text-white py-4">
+        <div class="container">
+            <p>&copy; 2025 Green Pulse | Conçu pour un marché plus équitable</p>
+            <p>Projet académique – Collège de Rosemont – Prof. Dini Ahamada</p>
+            <p>Kossi Mawuli Eloge Assiobo – Lucas Bidault-Meresse – Lleyton Habimana</p>
+        </div>
+    </footer>
+
+</div>
+
+<!-- Bouton flottant pour ouvrir le chat -->
+<button id="openChatBtn" class="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle" style="z-index: 1050;">
+    💬
+</button>
+
+<!-- Modal Ollama -->
+<div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="chatModalLabel">Discuter avec GreenBot, notre IA</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <div id="chatBox" style="max-height: 300px; overflow-y: auto;"></div>
+
+                <!-- Spinner de chargement (initialement caché) -->
+                <div id="loadingSpinner" class="text-center" style="display: none;">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
+
+                <div class="input-group mt-3">
+                    <input type="text" id="userMessage" class="form-control" placeholder="Écrivez votre message...">
+                    <button class="btn btn-success" id="sendMessage">Envoyer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Ouvrir la fenêtre modale
+    document.getElementById('openChatBtn').addEventListener('click', () => {
+        var chatModal = new bootstrap.Modal(document.getElementById('chatModal'));
+        chatModal.show();
+    });
+
+    // Envoyer le message à Ollama (backend proxy recommandé)
+    document.getElementById('sendMessage').addEventListener('click', async () => {
+        const userMsg = document.getElementById('userMessage').value;
+        if (!userMsg) return;
+
+        const chatBox = document.getElementById('chatBox');
+        chatBox.innerHTML += `<div class="mb-2"><strong>Vous :</strong> ${userMsg}</div>`;
+        document.getElementById('userMessage').value = '';
+
+        // Afficher le spinner de chargement
+        document.getElementById('loadingSpinner').style.display = 'block';
+
+        // Appel API à votre backend qui relaie à Ollama
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: userMsg })
+        });
+
+        const data = await response.json();
+
+        // Cacher le spinner de chargement
+        document.getElementById('loadingSpinner').style.display = 'none';
+
+        // Afficher la réponse de GreenBot (Ollama)
+        chatBox.innerHTML += `<div class="mb-2"><strong>GreenBot :</strong> ${data.reply}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+</script>
+
+<div class="gtranslate_wrapper"></div>
+
+<script>
+    window.gtranslateSettings = {
+        default_language: "fr",
+        languages: ["en", "fr", "es"],
+        wrapper_selector: ".gtranslate_wrapper",
+        detect_browser_language: true,
+        remember_language: true
+    };
+</script>
+
+<script src="https://cdn.gtranslate.net/widgets/latest/float.js" defer></script>
+
+<script src="/static/parametres.js"></script>
+
+</body>
+
+</html>

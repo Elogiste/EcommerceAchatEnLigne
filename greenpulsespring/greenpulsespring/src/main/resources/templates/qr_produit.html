@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Appliquer la classe dark-mode le plus tôt possible
+        if (localStorage.getItem("darkModeActif") === "true") {
+            document.documentElement.classList.add("dark-mode");
+        }
+        const tailleTexte = localStorage.getItem("tailleTexte");
+        if (tailleTexte) {
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.style.fontSize = tailleTexte;
+            });
+        }
+
+        const savedFuseau = localStorage.getItem("fuseauHoraire");
+        const notifEmail = localStorage.getItem("notifEmail");
+    </script>
+    <title>QR Code Produit</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 90%;
+            max-width: 900px;
+            height: 600px;
+        }
+
+        h2 {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        img {
+            width: 80%;
+            height: auto;
+            margin: 20px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            max-width: 400px;  /* Taille maximale */
+            max-height: 400px; /* Taille maximale */
+        }
+
+        p {
+            font-size: 1.1em;
+            color: #555;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2 th:text="'QR Code pour ' + ${produit.nom}"></h2>
+    <img th:src="'data:image/png;base64,' + ${qrcode}" alt="QR Code">
+    <p>
+        Lien : <a th:href="${url}" th:text="${url}"></a>
+    </p>
+</div>
+</body>
+</html>

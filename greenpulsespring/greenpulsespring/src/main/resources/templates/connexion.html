@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    // Appliquer la classe dark-mode le plus tôt possible
+    if (localStorage.getItem("darkModeActif") === "true") {
+      document.documentElement.classList.add("dark-mode");
+    }
+    const tailleTexte = localStorage.getItem("tailleTexte");
+    if (tailleTexte) {
+      document.addEventListener("DOMContentLoaded", () => {
+        document.body.style.fontSize = tailleTexte;
+      });
+    }
+
+    const savedFuseau = localStorage.getItem("fuseauHoraire");
+    const notifEmail = localStorage.getItem("notifEmail");
+  </script>
+  <title>Connexion | Green Pulse</title>
+
+  <!-- Bootstrap + Styles -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+
+  <!-- Scripts Bootstrap/jQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  <style>
+
+    body {
+      background-color: #f8f9fa; /* fond clair de Bootstrap par défaut */
+    }
+
+    .dark-mode body {
+      background-color: #121212 !important;
+      color: #ffffff;
+    }
+
+
+
+
+    .dark-mode a {
+      color: #80cbc4;
+    }
+
+    .dark-mode .btn-secondary {
+      background-color: #444;
+      border-color: #555;
+    }
+
+    .border {
+      background-color: #ffffff;
+      color: #000000;
+    }
+    .dark-mode .border {
+      background-color: #444 !important;
+      border-color: #555;
+    }
+
+    .dark-mode .form-group{
+      background-color: #343434 !important;
+      color: #ffffff;
+    }
+
+
+
+  </style>
+</head>
+
+<body class="bg-light">
+
+<div class="container-fluid">
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+    <a class="navbar-brand" th:href="@{/}">
+      <img src="/images/greenpulseexport.jpeg" class="logo" alt="Green Pulse" height="40">
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" th:href="@{/}">Accueil</a>
+        </li>
+
+        <!-- Lien vers le Dashboard pour les utilisateurs connectés -->
+        <li class="nav-item" th:if="${utilisateurConnecte != null}">
+          <a class="nav-link" th:href="@{/dashboard}">Tableau de bord</a>
+        </li>
+
+        <!-- Utilisateur non connecté -->
+        <li class="nav-item" th:if="${utilisateurConnecte == null}">
+          <a class="nav-link" th:href="@{/connexion}">Connexion</a>
+        </li>
+        <li class="nav-item" th:if="${utilisateurConnecte == null}">
+          <a class="nav-link" th:href="@{/utilisateurs/new}">Inscription</a>
+        </li>
+
+        <!-- Utilisateur connecté -->
+        <li class="nav-item" th:if="${utilisateurConnecte != null}">
+          <a class="nav-link fw-bold text-white" th:href="@{/profil}">
+            <span th:text="${utilisateurConnecte.prenom}">Mon Profil</span>
+          </a>
+        </li>
+
+        <!-- Lien vers la liste des produits pour Acheteur et Producteur -->
+        <li class="nav-item" th:if="${utilisateurConnecte != null}">
+          <a class="nav-link" th:href="@{/produits}">Liste des Produits</a>
+        </li>
+
+        <!-- Lien vers le panier visible pour les acheteurs -->
+        <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Acheteur'}">
+          <a class="nav-link" th:href="@{/ajouterAuPanier/Produit}">Mon Panier</a>
+        </li>
+
+        <!-- Administrateur -->
+        <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Administrateur'}">
+          <a class="nav-link" th:href="@{/utilisateurs}">Utilisateurs</a>
+        </li>
+
+        <!-- Lien Ajouter un Produit visible uniquement pour les producteurs -->
+        <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Producteur'}">
+          <a class="nav-link" href="/ajouterProduit">Ajouter un Produit</a>
+        </li>
+        <!-- Lien Messagerie-->
+        <li class="nav-item" th:if="${utilisateurConnecte != null}">
+          <a class="nav-link" th:href="@{/EnvoyerMessages}">Messagerie</a>
+        </li>
+
+        <!-- Déconnexion -->
+        <li class="nav-item" th:if="${utilisateurConnecte != null}">
+          <a class="nav-link" th:href="@{/deconnexion}">Déconnexion</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- FORMULAIRE DE CONNEXION -->
+  <div class="text-center my-5">
+    <h2>Connexion à votre compte</h2>
+  </div>
+
+  <form action="/connexion/verification" method="post" style="max-width: 600px; margin: 0 auto">
+    <div class="border border-secondary rounded p-4 bg-white shadow-sm">
+      <div class="form-group">
+        <label for="email">Adresse e-mail</label>
+        <input type="email" class="form-control" id="email" name="email" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+      </div>
+      <div class="g-recaptcha" data-sitekey="6LeRijgrAAAAAAT4PdPABCC-FDFJd8cpdgREXWgT"></div>
+      <div class="text-center">
+        <input type="submit" value="Se connecter" class="btn btn-success px-4 py-2 m-2"/>
+        <input type="button" value="Annuler" class="btn btn-secondary px-4 py-2 m-2" id="buttonCancel"/>
+      </div>
+    </div>
+  </form>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <div class="gtranslate_wrapper"></div>
+  <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+  <script>
+    window.gtranslateSettings = {
+      default_language: "fr",
+      languages: ["en", "fr", "it", "es", "ja"],
+      wrapper_selector: ".gtranslate_wrapper",
+      detect_browser_language: true,
+      remember_language: true
+    };
+  </script>
+  <script src="https://cdn.gtranslate.net/widgets/latest/float.js" defer></script>
+  <!-- FOOTER -->
+  <footer class="footer text-center bg-dark text-white py-4">
+    <div class="container">
+      <p>&copy; 2025 Green Pulse | Conçu pour un marché plus équitable</p>
+      <p>Projet académique – Collège de Rosemont – Prof. Dini Ahamada</p>
+      <p>Kossi Mawuli Eloge Assiobo – Lucas Bidault-Meresse – Lleyton Habimana</p>
+    </div>
+  </footer>
+
+</div>
+
+
+<script>
+  $("#buttonCancel").on("click", function () {
+    window.location = "/";
+  });
+</script>
+
+<!-- Bouton flottant pour ouvrir le chat -->
+<button id="openChatBtn" class="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle" style="z-index: 1050;">
+  💬
+</button>
+
+<!-- Modal Ollama -->
+<div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="chatModalLabel">Discuter avec GreenBot, notre IA</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <div id="chatBox" style="max-height: 300px; overflow-y: auto;"></div>
+
+        <!-- Spinner de chargement (initialement caché) -->
+        <div id="loadingSpinner" class="text-center" style="display: none;">
+          <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Chargement...</span>
+          </div>
+        </div>
+
+        <div class="input-group mt-3">
+          <input type="text" id="userMessage" class="form-control" placeholder="Écrivez votre message...">
+          <button class="btn btn-success" id="sendMessage">Envoyer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Ouvrir la fenêtre modale
+  document.getElementById('openChatBtn').addEventListener('click', () => {
+    var chatModal = new bootstrap.Modal(document.getElementById('chatModal'));
+    chatModal.show();
+  });
+
+  // Envoyer le message à Ollama (backend proxy recommandé)
+  document.getElementById('sendMessage').addEventListener('click', async () => {
+    const userMsg = document.getElementById('userMessage').value;
+    if (!userMsg) return;
+
+    const chatBox = document.getElementById('chatBox');
+    chatBox.innerHTML += `<div class="mb-2"><strong>Vous :</strong> ${userMsg}</div>`;
+    document.getElementById('userMessage').value = '';
+
+    // Afficher le spinner de chargement
+    document.getElementById('loadingSpinner').style.display = 'block';
+
+    // Appel API à votre backend qui relaie à Ollama
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: userMsg })
+    });
+
+    const data = await response.json();
+
+    // Cacher le spinner de chargement
+    document.getElementById('loadingSpinner').style.display = 'none';
+
+    // Afficher la réponse de GreenBot (Ollama)
+    chatBox.innerHTML += `<div class="mb-2"><strong>GreenBot :</strong> ${data.reply}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+</script>
+
+<div class="gtranslate_wrapper"></div>
+
+<script>
+  window.gtranslateSettings = {
+    default_language: "fr",
+    languages: ["en", "fr", "es"],
+    wrapper_selector: ".gtranslate_wrapper",
+    detect_browser_language: true,
+    remember_language: true
+  };
+</script>
+
+<script src="https://cdn.gtranslate.net/widgets/latest/float.js" defer></script>
+
+</body>
+</html>

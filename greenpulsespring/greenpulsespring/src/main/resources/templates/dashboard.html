@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+        if (localStorage.getItem("darkModeActif") === "true") {
+            document.documentElement.classList.add("dark-mode");
+        }
+        const tailleTexte = localStorage.getItem("tailleTexte");
+        if (tailleTexte) {
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.style.fontSize = tailleTexte;
+            });
+        }
+
+        const savedFuseau = localStorage.getItem("fuseauHoraire");
+        const notifEmail = localStorage.getItem("notifEmail");
+    </script>
+    <title>Tableau de bord | Green Pulse</title>
+
+    <!-- CSS / JS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Styles personnalisés -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .dark-mode body {
+            background-color: #121212 !important;
+            color: #ffffff;
+        }
+
+        .dark-mode .card,
+        .dark-mode .list-group-item,
+        .dark-mode .navbar,
+        .dark-mode .footer,
+        .dark-mode .alert {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border-color: #333;
+        }
+
+        .dark-mode a {
+            color: #80cbc4;
+        }
+
+        .dark-mode .btn-secondary {
+            background-color: #444;
+            border-color: #555;
+        }
+
+        .chart-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+            max-height: 300px;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+<div class="container-fluid">
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+        <a class="navbar-brand" th:href="@{/}">
+            <img src="/images/greenpulseexport.jpeg" class="logo" alt="Green Pulse" height="40" />
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" th:href="@{/}">Accueil</a></li>
+                <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                    <a class="nav-link" th:href="@{/dashboard}">Tableau de bord</a>
+                </li>
+                <li class="nav-item" th:if="${utilisateurConnecte == null}">
+                    <a class="nav-link" th:href="@{/connexion}">Connexion</a>
+                </li>
+                <li class="nav-item" th:if="${utilisateurConnecte == null}">
+                    <a class="nav-link" th:href="@{/utilisateurs/new}">Inscription</a>
+                </li>
+                <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                    <a class="nav-link fw-bold text-white" th:href="@{/profil}">
+                        <span th:text="${utilisateurConnecte.prenom}">Mon Profil</span>
+                    </a>
+                </li>
+                <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                    <a class="nav-link" th:href="@{/produits}">Liste des Produits</a>
+                </li>
+                <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Acheteur'}">
+                    <a class="nav-link" th:href="@{/ajouterAuPanier/Produit}">Mon Panier</a>
+                </li>
+                <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Administrateur'}">
+                    <a class="nav-link" th:href="@{/utilisateurs}">Utilisateurs</a>
+                </li>
+                <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Producteur'}">
+                    <a class="nav-link" href="/ajouterProduit">Ajouter un Produit</a>
+                </li>
+                <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                    <a class="nav-link" th:href="@{/EnvoyerMessages}">Messagerie</a>
+                </li>
+                <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                    <a class="nav-link" th:href="@{/deconnexion}">Déconnexion</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero bg-success text-white text-center py-5">
+        <div class="container">
+            <h1 class="display-4">Tableau de bord</h1>
+            <p class="lead">Bienvenue sur votre tableau de bord Green Pulse.</p>
+        </div>
+    </section>
+
+    <!-- CONTENU -->
+    <div class="container py-5">
+        <!-- Acheteur -->
+        <div th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Acheteur'}">
+            <h3 class="mb-4">Vos achats récents</h3>
+            <div class="chart-container">
+                <canvas id="chartAchats"></canvas>
+            </div>
+        </div>
+
+        <!-- Producteur -->
+        <div th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Producteur'}">
+            <h3 class="mb-4">Statistiques de vos ventes</h3>
+            <div class="chart-container">
+                <canvas id="chartVentesProducteur"></canvas>
+            </div>
+        </div>
+
+        <!-- Administrateur -->
+        <div th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Administrateur'}">
+            <h3 class="mb-4">Vue d'ensemble des ventes</h3>
+            <div class="chart-container">
+                <canvas id="chartGlobalVentes"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer text-center bg-dark text-white py-4">
+        <div class="container">
+            <p>&copy; 2025 Green Pulse | Conçu pour un marché plus équitable</p>
+            <p>Projet académique – Collège de Rosemont – Prof. Dini Ahamada</p>
+            <p>Kossi Mawuli Eloge Assiobo – Lucas Bidault-Meresse – Lleyton Habimana</p>
+        </div>
+    </footer>
+</div>
+
+<!-- JS Chart -->
+<script th:inline="javascript">
+    const achatsParMois = /*[[${achatsParMois}]]*/ [];
+    const ventesParProduit = /*[[${ventesParProduit}]]*/ [];
+    const statsGlobales = /*[[${statsGlobales}]]*/ [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (document.getElementById("chartAchats")) {
+            new Chart(document.getElementById('chartAchats'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(achatsParMois),
+                    datasets: [{
+                        label: 'Achats par mois (CAD)',
+                        data: Object.values(achatsParMois),
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)'
+                    }]
+                }
+            });
+        }
+        if (document.getElementById("chartVentesProducteur")) {
+            new Chart(document.getElementById('chartVentesProducteur'), {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(ventesParProduit),
+                    datasets: [{
+                        label: 'Ventes',
+                        data: Object.values(ventesParProduit),
+                        backgroundColor: ['#4CAF50', '#8BC34A', '#CDDC39']
+                    }]
+                }
+            });
+        }
+        if (document.getElementById("chartGlobalVentes")) {
+            new Chart(document.getElementById('chartGlobalVentes'), {
+                type: 'line',
+                data: {
+                    labels: Object.keys(statsGlobales),
+                    datasets: [{
+                        label: 'Ventes globales',
+                        data: Object.values(statsGlobales),
+                        fill: false,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        tension: 0.1
+                    }]
+                }
+            });
+        }
+    });
+</script>
+
+<!-- Chat flottant -->
+<button id="openChatBtn" class="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle" style="z-index: 1050;">
+    💬
+</button>
+
+<div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="chatModalLabel">Discuter avec GreenBot, notre IA</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <div id="chatBox" style="max-height: 300px; overflow-y: auto;"></div>
+                <div id="loadingSpinner" class="text-center" style="display: none;">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
+                <div class="input-group mt-3">
+                    <input type="text" id="userMessage" class="form-control" placeholder="Écrivez votre message..." />
+                    <button class="btn btn-success" id="sendMessage">Envoyer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('openChatBtn').addEventListener('click', () => {
+        var chatModal = new bootstrap.Modal(document.getElementById('chatModal'));
+        chatModal.show();
+    });
+
+    document.getElementById('sendMessage').addEventListener('click', async () => {
+        const userMsg = document.getElementById('userMessage').value;
+        if (!userMsg) return;
+
+        const chatBox = document.getElementById('chatBox');
+        chatBox.innerHTML += `<div class="mb-2"><strong>Vous :</strong> ${userMsg}</div>`;
+        document.getElementById('userMessage').value = '';
+        document.getElementById('loadingSpinner').style.display = 'block';
+
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: userMsg })
+        });
+
+        const data = await response.json();
+        document.getElementById('loadingSpinner').style.display = 'none';
+        chatBox.innerHTML += `<div class="mb-2"><strong>GreenBot :</strong> ${data.reply}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+</script>
+
+<!-- Google Translate -->
+<div class="gtranslate_wrapper"></div>
+<script>
+    window.gtranslateSettings = {
+        default_language: "fr",
+        languages: ["en", "fr", "es"],
+        wrapper_selector: ".gtranslate_wrapper",
+        detect_browser_language: true,
+        remember_language: true
+    };
+</script>
+<script src="https://cdn.gtranslate.net/widgets/latest/float.js" defer></script>
+</body>
+</html>

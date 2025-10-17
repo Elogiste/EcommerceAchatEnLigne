@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mes Commandes</title>
+</head>
+<body>
+<h1>Mes Commandes</h1>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Date</th>
+        <th>Statut</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="commande : ${commandes}">
+        <td th:text="${commande.id}"></td>
+        <td th:text="${commande.dateCommande}"></td>
+        <td th:text="${commande.etat}"></td>
+        <td>
+            <a th:href="@{/commande/{id}(id=${commande.id})}">Voir Détails</a>
+            <form th:action="@{/commande/valider/{id}(id=${commande.id})}" method="post">
+                <button type="submit" th:disabled="${commande.etat == 'VALIDEE'}">Valider</button>
+            </form>
+            <form th:action="@{/commande/annuler/{id}(id=${commande.id})}" method="post">
+                <button type="submit" th:disabled="${commande.etat == 'ANNULEE'}">Annuler</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

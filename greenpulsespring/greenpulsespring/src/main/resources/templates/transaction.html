@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>commande</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" th:href="@{/css/global.css}">
+    <link rel="stylesheet" th:href="@{/css/button.css}">
+    <link rel="stylesheet" th:href="@{/css/alert.css}">
+</head>
+<body class="background" >
+<div th:replace="fragments/headerConnexionCompteAcheteur :: navBar"></div>
+
+
+
+
+<script th:src="@{/js/script.js}"></script>
+<div class="background"  >
+
+    <div  class="greenPulseContainer">
+        <div th:if="${message}" class="alert alert-success" style="margin-bottom: 20px;">
+            <p th:text="${message}"></p>
+        </div>
+        <table class="table table-bordered table-striped table-hover table-responsive-xl">
+            <thead class="thead-dark">
+            <tr>
+                <th class="hideable-column">
+                    ID Transaction
+                </th>
+
+
+
+                <th class="hideable-column"> date Commande
+
+                </th>
+                <th>État</th>
+                <th>Prix</th>
+
+
+
+
+
+
+
+            </tr>
+            </thead>
+            <tbody>
+
+            <tr th:each="commande : ${listCommande}"th:if="${commande.etat == 'En cours'}">
+                <td class="hideable-column">[[${commande.id}]]</td>
+
+                <td class="hideable-column">[[${#dates.format(commande.dateLivraison,"dd/MM/yyyy")}]]</td>
+                <td>[[${commande.etat}]]</td>
+                <td>[[${commande.prix}]]</td>
+
+
+
+
+            </tr>
+            <tr th:each="commande : ${listCommande}" th:if="${commande.etat == 'En cours'}" >
+                <td>[[${commande.id}]]</td>
+                <td></td>
+                <td>
+                    <span th:if="${commande.etat == 'En cours'}">
+
+        </span>
+
+                </td>
+                <td> [[${commande.prix}]] $</td>
+
+
+            </tr>
+
+            </tbody>
+        </table>
+        <br>
+        <div class="signup-container">
+        <form class="login-form" th:each="commande : ${listCommande}" th:if="${commande.etat == 'En cours'}"  th:object="${transaction}" th:action="@{'/transaction/achat/' + ${commande.id}}" method="post">
+            <input type="hidden" name="commandeId" th:value="${commande.id}" />
+
+            <select th:field="*{modePaiement}"onchange="toggleFields(this)" required>
+                <option value="debit"
+                        th:selected="${transaction.modePaiement == 'debit'}">Débit</option>
+                <option value="credit"
+                        th:selected="${transaction.modePaiement == 'credit'}">Crédit</option>
+            </select>
+
+
+            <div class="input-group">
+            <div class="debit-fields" style="display: none;">
+                <label>IBAN :</label>
+                <input type="text" name="iban" placeholder="FR76 XXXX XXXX XXXX" />
+            </div>
+    </div>
+            <div class="input-group">
+
+            <div class="credit-fields" style="display: block;">
+                <label>Numéro de carte :</label>
+                <input type="text" name="cardNumber" placeholder="XXXX XXXX XXXX XXXX" />
+
+                <label>Date d'expiration :</label>
+                <input type="text" name="expiryDate" placeholder="MM/AA" />
+
+                <label>CVV :</label>
+                <input type="text" name="cvv" placeholder="123" />
+            </div>
+    </div>
+            <div class="input-group">
+            <button type="submit" class="btn">Procéder au paiement</button></div>
+        </form></div>
+        </td>
+        </tr>
+
+        <script>
+            function toggleFields(select) {
+                const form = select.closest('form');
+                const debitFields = form.querySelector('.debit-fields');
+                const creditFields = form.querySelector('.credit-fields');
+
+                if (select.value === 'debit') {
+                    debitFields.style.display = 'block';
+                    creditFields.style.display = 'none';
+                } else if (select.value === 'credit') {
+                    creditFields.style.display = 'block';
+                    debitFields.style.display = 'none';
+                } else {
+                    debitFields.style.display = 'none';
+                    creditFields.style.display = 'none';
+                }
+            }
+
+            // Appelé au chargement pour forcer l’affichage correct si besoin
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('select[name="modePaiement"]').forEach(toggleFields);
+            });
+        </script>
+    </div>
+
+</div>
+</body>
+</html>

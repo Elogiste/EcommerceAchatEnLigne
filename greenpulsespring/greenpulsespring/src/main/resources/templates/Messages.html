@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Messages</title>
+    <script>
+        // Appliquer la classe dark-mode le plus tôt possible
+        if (localStorage.getItem("darkModeActif") === "true") {
+            document.documentElement.classList.add("dark-mode");
+        }
+        const tailleTexte = localStorage.getItem("tailleTexte");
+        if (tailleTexte) {
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.style.fontSize = tailleTexte;
+            });
+        }
+
+        const savedFuseau = localStorage.getItem("fuseauHoraire");
+        const notifEmail = localStorage.getItem("notifEmail");
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <script src="https://cdn.gtranslate.net/widgets/latest/float.js" defer></script>
+    <style>
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+
+        .message-box {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+
+            word-wrap: break-word;
+            margin-bottom: 10px;
+        }
+
+        .receveur {
+            align-self: flex-start;
+            background-color: #f8d7da;
+            max-width: 100%;
+            height: auto;
+
+        }
+
+        .envoyeur {
+            align-self: flex-end;
+            background-color: #d4edda;
+            max-width: 100%;
+            height: auto;
+
+        }
+
+        .message-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+
+
+        .d-grid:hover {
+            background-color: #218838;
+        }
+        .pfp {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        body {
+            background-color: #f8f9fa; /* fond clair de Bootstrap par défaut */
+        }
+
+        .dark-mode body {
+            background-color: #121212 !important;
+            color: #ffffff;
+        }
+
+
+        .dark-mode .footer,
+        .dark-mode .alert {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border-color: #333;
+        }
+
+        .dark-mode a {
+            color: #80cbc4;
+        }
+
+        .dark-mode .btn-secondary {
+            background-color: #444 !important;
+            border-color: #555;
+        }
+
+        .chat-container{
+            background-color: #f8f9fa;
+            color: #000000;
+        }
+
+        .dark-mode .chat-container{
+            background-color: #1e1e1e !important;
+            color: #000000;
+        }
+    </style>
+</head>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let boiteOuverte = null;
+
+        document.querySelectorAll(".message-box").forEach(function (box) {
+            box.addEventListener("click", function (e) {
+                // Fermer l'ancienne boîte ouverte, s'il y en a une
+                if (boiteOuverte && boiteOuverte !== box) {
+                    const ancienLien = boiteOuverte.querySelector(".edit-delete-links");
+                    if (ancienLien) ancienLien.style.display = 'none';
+                }
+
+                // Ouvrir la boîte cliquée
+                const links = box.querySelector(".edit-delete-links");
+                if (links) {
+                    const boiteVisible = links.style.display === 'block';
+                    links.style.display = boiteVisible ? 'none' : 'block';
+
+                    // Mémoriser ou réinitialiser la boîte actuellement ouverte
+                    boiteOuverte= boiteVisible ? null : box;
+                }
+
+                e.stopPropagation(); // Empêche la fermeture immédiate
+            });
+        });
+
+        // Clic encore : tout fermer
+        document.addEventListener("click", function () {
+            if (boiteOuverte) {
+                const links = boiteOuverte.querySelector(".edit-delete-links");
+                if (links) links.style.display = 'none';
+                boiteOuverte = null;
+            }
+        });
+    });
+</script>
+
+
+<body class="bg-light" >
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+    <a class="navbar-brand" th:href="@{/}">
+        <img src="/images/greenpulseexport.jpeg" class="logo" alt="Green Pulse" height="40">
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarContent">
+        <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/}">Accueil</a>
+            </li>
+
+            <!-- Lien vers le Dashboard pour les utilisateurs connectés -->
+            <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                <a class="nav-link" th:href="@{/dashboard}">Tableau de bord</a>
+            </li>
+
+            <!-- Utilisateur non connecté -->
+            <li class="nav-item" th:if="${utilisateurConnecte == null}">
+                <a class="nav-link" th:href="@{/connexion}">Connexion</a>
+            </li>
+            <li class="nav-item" th:if="${utilisateurConnecte == null}">
+                <a class="nav-link" th:href="@{/utilisateurs/new}">Inscription</a>
+            </li>
+
+            <!-- Utilisateur connecté -->
+            <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                <a class="nav-link fw-bold text-white" th:href="@{/profil}">
+                    <span th:text="${utilisateurConnecte.prenom}">Mon Profil</span>
+                </a>
+            </li>
+
+            <!-- Lien vers la liste des produits pour Acheteur et Producteur -->
+            <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                <a class="nav-link" th:href="@{/produits}">Liste des Produits</a>
+            </li>
+
+            <!-- Lien vers le panier visible pour les acheteurs -->
+            <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Acheteur'}">
+                <a class="nav-link" th:href="@{/ajouterAuPanier/Produit}">Mon Panier</a>
+            </li>
+
+            <!-- Administrateur -->
+            <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Administrateur'}">
+                <a class="nav-link" th:href="@{/utilisateurs}">Utilisateurs</a>
+            </li>
+
+            <!-- Lien Ajouter un Produit visible uniquement pour les producteurs -->
+            <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Producteur'}">
+                <a class="nav-link" href="/ajouterProduit">Ajouter un Produit</a>
+            </li>
+            <!-- Lien Messagerie-->
+            <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                <a class="nav-link" th:href="@{/EnvoyerMessages}">Messagerie</a>
+            </li>
+
+            <!-- Déconnexion -->
+            <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                <a class="nav-link" th:href="@{/deconnexion}">Déconnexion</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div   style="max-width: 600px;max-height: 10px;
+    margin: 0 auto;
+    border-radius: 12px;
+    background-color: #f9f9f9;
+    ">
+
+
+
+
+<h5 th:if="${utilisateur!=null}" th:text="'Message avec ' + ${utilisateur.nom}+' '+${utilisateur.prenom}"> </h5>
+    <img class="pfp" th:if="${utilisateur!=null}" th:src="@{'/images/utilisateurs/'+ ${utilisateur.photo}}">
+    <form th:action="@{/messages/save}" method="post" enctype="multipart/form-data"  class="message-form" th:object="${messages}">
+        <input type="hidden" th:field="*{id}" />
+        <div class="chat-container">
+
+
+            <div class="message-box" th:each="message : ${listMessages}">
+
+                <div th:if="${message.id_envoyeur.id == idReceveur and message.id_receveur.id == idUtilisateur and message.id_envoyeur.id !=idUtilisateur }" class="message receveur ">
+                    <img class="pfp" th:src="@{'/images/utilisateurs/'+ ${message.id_envoyeur.photo}}" >
+                    <p><strong th:text="${message.id_envoyeur.nom + ' ' + message.id_envoyeur.prenom}">Receveur</strong>: </p>
+
+                    <span th:utext="${message.message}"></span>
+                  <p> <span th:if="${message.etat == 'modifié'}" class="text-muted" style="font-size: 0.8em;">(modifié)</span>
+                      <span class="text-muted" style="font-size: 0.8em;" th:text="${message.dateFormattee+''}"></span></p>
+                    <div th:if="${message.nomFichier != null}">
+                        <div th:if="${#strings.endsWith(message.nomFichier, '.mp4') or #strings.endsWith(message.nomFichier, '.webm')}">
+                            <video width="300" controls>
+                                <source th:src="@{'/images/' + ${message.nomFichier}}" type="video/mp4">
+                                Votre navigateur ne supporte pas la vidéo.
+                            </video>
+                        </div>
+                        <div th:unless="${#strings.endsWith(message.nomFichier, '.mp4') or #strings.endsWith(message.nomFichier, '.webm')}">
+                            <img th:src="@{'/images/' + ${message.nomFichier}}" alt="Image" width="300" />
+                        </div>
+                    </div>
+
+                    <div th:if="${utilisateurConnecte.role.nom == 'Administrateur'}" class="edit-delete-links" style="display: none;" >  <a class="fa-solid fa-pen-to-square" style="color: #218838" th:href="@{'/messages/edit/' + ${message.id}+ '?idReceveur=' + ${idReceveur}}" ></a>  <a class="fa-solid fa-trash-can" style="color: #218838"th:href="@{'/delete/message/' + ${message.id} + '?idReceveur=' + ${idReceveur}}" ></a></div>
+                </div>
+
+
+                <div th:if="${ message.id_envoyeur.id == idUtilisateur and message.id_receveur.id == idReceveur}" class="message envoyeur">
+                    <img class="pfp" th:src="@{'/images/utilisateurs/'+${message.id_envoyeur.photo}}">
+                    <p><strong th:text="${message.id_envoyeur.nom + ' ' + message.id_envoyeur.prenom }">Envoyeur</strong>: </p>
+                    <span th:utext="${message.message}"></span>
+                  <p> <span th:if="${message.etat == 'modifié'}" class="text-muted" style="font-size: 0.8em;">(modifié)</span>
+                      <span class="text-muted" style="font-size: 0.8em;" th:text="${message.dateFormattee+''}  "></span></p>
+                    <div th:if="${message.nomFichier != null}">
+                        <div th:if="${#strings.endsWith(message.nomFichier, '.mp4') or #strings.endsWith(message.nomFichier, '.webm')}">
+                            <video width="300" controls>
+                                <source th:src="@{'/images/' + ${message.nomFichier}}" type="video/mp4">
+                                Votre navigateur ne supporte pas la vidéo.
+                            </video>
+                        </div>
+                        <div th:unless="${#strings.endsWith(message.nomFichier, '.mp4') or #strings.endsWith(message.nomFichier, '.webm')}">
+                            <img th:src="@{'/images/' + ${message.nomFichier}}" alt="Image" width="300" />
+                        </div>
+                    </div>
+
+
+                    <div class="edit-delete-links" style="display: none;"><a class="fa-solid fa-pen-to-square" style="color: #218838" th:href="@{'/messages/edit/' + ${message.id}+ '?idReceveur=' + ${idReceveur}}" ></a>  <a class="fa-solid fa-trash-can" style="color: #218838"th:href="@{'/delete/message/' + ${message.id} + '?idReceveur=' + ${idReceveur}}" ></a></div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <div class="mb-2">
+            <label for="messages">Message</label>
+            <textarea id="messages" th:field="*{message}" class="form-control" rows="2" placeholder="Tapez votre message..." required></textarea>
+        </div>
+
+        <div >
+            <input type="hidden" name="idReceveur" th:value="${idReceveur}" />
+        </div>
+
+        <input type="hidden" th:field="*{id_envoyeur.id}" th:value="${session.utilisateurId}" />
+
+        <input type="hidden" th:field="*{etat}">
+        <div class="small text-muted" th:text="${messages.dateFormattee}"></div>
+
+
+        <div class="mb-3">
+            <label for="fichier" class="form-label">Fichier (optionnel)</label>
+            <input class="form-control" type="file" name="fichier" id="fichier" accept="image/*,video/*">
+        </div>
+        <div th:if="${messages.nomFichier != null}">
+            <img th:src="@{'/images/' + ${messages.nomFichier}}" alt="Fichier envoyé" width="300" />
+            <a th:href="@{'/images/' + ${messages.nomFichier}}" target="_blank">📎 Voir le fichier joint</a>
+        </div>
+        <button class="d-grid" style="background-color: #4CAF50; color:white;" type="submit" th:text="${messages.id != null} ?  'Envoyer'">Envoyer</button>
+    </form>
+</div>
+
+<!--    <div th:if="${messages != null}">
+        <div class="alert alert-success" th:text="${messages}" ></div>
+    </div>
+
+  <div th:if="${errorMessage != null}">
+      <div class="alert alert-danger" th:text="${errorMessage}"></div>
+  </div>
+-->
+
+<!-- Bouton flottant pour ouvrir le chat -->
+<button id="openChatBtn" class="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle" style="z-index: 1050;">
+    💬
+</button>
+
+<!-- Modal Ollama -->
+<div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="chatModalLabel">Discuter avec GreenBot, notre IA</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <div id="chatBox" style="max-height: 300px; overflow-y: auto;"></div>
+
+                <!-- Spinner de chargement (initialement caché) -->
+                <div id="loadingSpinner" class="text-center" style="display: none;">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
+
+                <div class="input-group mt-3">
+                    <input type="text" id="userMessage" class="form-control" placeholder="Écrivez votre message...">
+                    <button class="btn btn-success" id="sendMessage">Envoyer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Ouvrir la fenêtre modale
+    document.getElementById('openChatBtn').addEventListener('click', () => {
+        var chatModal = new bootstrap.Modal(document.getElementById('chatModal'));
+        chatModal.show();
+    });
+
+    // Envoyer le message à Ollama (backend proxy recommandé)
+    document.getElementById('sendMessage').addEventListener('click', async () => {
+        const userMsg = document.getElementById('userMessage').value;
+        if (!userMsg) return;
+
+        const chatBox = document.getElementById('chatBox');
+        chatBox.innerHTML += `<div class="mb-2"><strong>Vous :</strong> ${userMsg}</div>`;
+        document.getElementById('userMessage').value = '';
+
+        // Afficher le spinner de chargement
+        document.getElementById('loadingSpinner').style.display = 'block';
+
+        // Appel API à votre backend qui relaie à Ollama
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: userMsg })
+        });
+
+        const data = await response.json();
+
+        // Cacher le spinner de chargement
+        document.getElementById('loadingSpinner').style.display = 'none';
+
+        // Afficher la réponse de GreenBot (Ollama)
+        chatBox.innerHTML += `<div class="mb-2"><strong>GreenBot :</strong> ${data.reply}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+</script>
+
+<div class="gtranslate_wrapper"></div>
+
+<script>
+    window.gtranslateSettings = {
+        default_language: "fr",
+        languages: ["en", "fr", "es"],
+        wrapper_selector: ".gtranslate_wrapper",
+        detect_browser_language: true,
+        remember_language: true
+    };
+</script>
+
+
+
+</body>
+</html>

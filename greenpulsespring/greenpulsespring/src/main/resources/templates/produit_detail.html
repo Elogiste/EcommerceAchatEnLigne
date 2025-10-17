@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        // Appliquer la classe dark-mode le plus tôt possible
+        if (localStorage.getItem("darkModeActif") === "true") {
+            document.documentElement.classList.add("dark-mode");
+        }
+        const tailleTexte = localStorage.getItem("tailleTexte");
+        if (tailleTexte) {
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.style.fontSize = tailleTexte;
+            });
+        }
+
+        const savedFuseau = localStorage.getItem("fuseauHoraire");
+        const notifEmail = localStorage.getItem("notifEmail");
+    </script>
+    <title>Détail du produit</title>
+    <link rel="stylesheet" href="@{style.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+
+    <style>
+        body{
+            background: linear-gradient(45deg, #ffffff 25%, transparent 25%), linear-gradient(315deg, #ffffff 25%, transparent 25%),linear-gradient(45deg, transparent 24%,#228538 25%, #228538 45%, transparent 45%), linear-gradient(315deg, transparent 24%,#50c532 25%, #50c532 45%, transparent 45%);
+            background-size: 14em 14em;
+            background-color: #ffffff;
+            opacity: 1
+        }
+
+        .containerImageDetailProduit {
+            width: 600px;
+            height: 300px;
+            overflow: hidden;
+            align-items: center;
+            justify-items: center;
+            margin: auto;
+        }
+
+        .imageProduitDetails img {
+            display: block;
+            max-width: 600px;
+            width: 100%;
+            height: auto;
+            border: 3px solid white;
+        }
+
+        .produitDetailsString {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            background-color: #f9f9f9;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            font-family: Arial, sans-serif;
+        }
+
+        .produitDetailsString p {
+            font-size: 1.1em;
+            margin: 10px 0;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .produitDetailsString p::before {
+            content: "• ";
+            color: #2a8a48;
+            font-weight: bold;
+        }
+
+        .nomProduit {
+            background-color: #333333;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            border-radius: 999px;
+            padding: 60px 40px;
+            text-transform: uppercase;
+            width: fit-content;
+            margin: auto;
+            text-align: center;
+        }
+
+        #map {
+            height: 400px;  /* La hauteur de la carte */
+        }
+
+
+
+         body {
+             background-color: #f8f9fa; /* fond clair de Bootstrap par défaut */
+         }
+
+        .dark-mode body {
+            background-color: #121212 !important;
+            color: #ffffff;
+        }
+
+
+        .dark-mode .card,
+        .dark-mode .list-group-item,
+        .dark-mode .navbar,
+        .dark-mode .footer,
+        .dark-mode .alert {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border-color: #333;
+        }
+
+        .dark-mode a {
+            color: #80cbc4;
+        }
+
+        .dark-mode .btn-secondary {
+            background-color: #444;
+            border-color: #555;
+        }
+
+    </style>
+</head>
+<body>
+
+<br>
+
+<div class="nomProduit">
+<h1 th:text="${produit.nom}">Nom du produit</h1>
+</div>
+
+<br>
+<br>
+<br>
+
+<div class="imageProduitDetails">
+    <div class="containerImageDetailProduit">
+        <img th:src="@{'/images/produits/' + ${produit.photo}}" />
+    </div>
+</div>
+
+<div class="produitDetailsString">
+    <div th:if="${produit.description != null}">
+        <p th:text="'Description : ' + ${produit.description}"></p>
+    </div>
+
+    <div th:if="${produit.prix != null}">
+        <p th:text="'Prix : ' + ${produit.prix} + ' CAD'"></p>
+    </div>
+
+    <div th:if="${produit.prix_unitaire != null}">
+        <p th:text="'Prix Unitaire : ' + ${produit.prix_unitaire} + ' ' + ${produit.choixPrixUnitaire}"></p>
+    </div>
+
+    <div th:if="${produit.origine_provenance != null}">
+        <p th:text="'Coordonnées : ' + ${produit.origine_provenance}"></p>
+    </div>
+
+    <div th:if="${produit.date_recolte != null}">
+        <p th:text="'Récolté le : ' + ${produit.date_recolte}"></p>
+    </div>
+
+    <div th:if="${produit.label != null}">
+        <p th:text="'Labels : ' + ${produit.label}"></p>
+    </div>
+
+</div>
+
+<input type="hidden" id="localisation" name="localisation" th:field="*{produit.origine_provenance}"/>
+
+<div id="map" style="height: 400px;"></div>
+
+
+</body>
+</html>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var coordStr = document.getElementById('localisation').value;
+        if (!coordStr) return;
+
+        var coords = coordStr.split(',');
+        if (coords.length !== 2) return;
+
+        var lat = parseFloat(coords[0]);
+        var lon = parseFloat(coords[1]);
+        if (isNaN(lat) || isNaN(lon)) return;
+
+        var map = L.map('map').setView([lat, lon], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        L.marker([lat, lon]).addTo(map)
+            .bindPopup("Localisation : " + lat.toFixed(6) + ", " + lon.toFixed(6))
+            .openPopup();
+    });
+
+</script>
+<div class="gtranslate_wrapper"></div>
+
+<script>
+    window.gtranslateSettings = {
+        default_language: "fr",
+        languages: ["en", "fr", "es"],
+        wrapper_selector: ".gtranslate_wrapper",
+        detect_browser_language: true,
+        remember_language: true
+    };
+</script>

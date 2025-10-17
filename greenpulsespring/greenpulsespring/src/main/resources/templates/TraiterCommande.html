@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        // Appliquer la classe dark-mode le plus tôt possible
+        if (localStorage.getItem("darkModeActif") === "true") {
+            document.documentElement.classList.add("dark-mode");
+        }
+        const tailleTexte = localStorage.getItem("tailleTexte");
+        if (tailleTexte) {
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.style.fontSize = tailleTexte;
+            });
+        }
+
+        const savedFuseau = localStorage.getItem("fuseauHoraire");
+        const notifEmail = localStorage.getItem("notifEmail");
+    </script>
+    <title>Traitement de votre Commande</title>
+
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .backgroundPaiement {
+            background-color: #e5e5f7;
+            opacity: 0.8;
+            background: repeating-linear-gradient(-45deg, #00b33d, #00b33d 20px, #e5e5f7 20px, #e5e5f7 100px);
+        }
+
+
+         body {
+             background-color: #f8f9fa; /* fond clair de Bootstrap par défaut */
+         }
+
+        .dark-mode body {
+            background-color: #121212 !important;
+            color: #ffffff;
+        }
+
+
+        .dark-mode .card,
+        .dark-mode .list-group-item,
+        .dark-mode .navbar,
+        .dark-mode .footer,
+        .dark-mode .alert {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border-color: #333;
+        }
+
+        .dark-mode a {
+            color: #80cbc4;
+        }
+
+        .dark-mode .btn-secondary {
+            background-color: #444;
+            border-color: #555;
+        }
+
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+    <a class="navbar-brand" th:href="@{/}">
+        <img src="/images/greenpulseexport.jpeg" class="logo" alt="Green Pulse" height="40">
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarContent">
+        <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/}">Accueil</a>
+            </li>
+
+            <!-- Lien vers le Dashboard pour les utilisateurs connectés -->
+            <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                <a class="nav-link" th:href="@{/dashboard}">Tableau de bord</a>
+            </li>
+
+            <!-- Utilisateur non connecté -->
+            <li class="nav-item" th:if="${utilisateurConnecte == null}">
+                <a class="nav-link" th:href="@{/connexion}">Connexion</a>
+            </li>
+            <li class="nav-item" th:if="${utilisateurConnecte == null}">
+                <a class="nav-link" th:href="@{/utilisateurs/new}">Inscription</a>
+            </li>
+
+            <!-- Utilisateur connecté -->
+            <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                <a class="nav-link fw-bold text-white" th:href="@{/profil}">
+                    <span th:text="${utilisateurConnecte.prenom}">Mon Profil</span>
+                </a>
+            </li>
+
+            <!-- Lien vers la liste des produits pour Acheteur et Producteur -->
+            <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                <a class="nav-link" th:href="@{/produits}">Liste des Produits</a>
+            </li>
+
+            <!-- Lien vers le panier visible pour les acheteurs -->
+            <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Acheteur'}">
+                <a class="nav-link" th:href="@{/ajouterAuPanier/Produit}">Mon Panier</a>
+            </li>
+
+            <!-- Administrateur -->
+            <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Administrateur'}">
+                <a class="nav-link" th:href="@{/utilisateurs}">Utilisateurs</a>
+            </li>
+
+            <!-- Lien Ajouter un Produit visible uniquement pour les producteurs -->
+            <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Producteur'}">
+                <a class="nav-link" href="/ajouterProduit">Ajouter un Produit</a>
+            </li>
+            <!-- Lien Messagerie-->
+            <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                <a class="nav-link" th:href="@{/EnvoyerMessages}">Messagerie</a>
+            </li>
+
+            <!-- Déconnexion -->
+            <li class="nav-item" th:if="${utilisateurConnecte != null}">
+                <a class="nav-link" th:href="@{/deconnexion}">Déconnexion</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<!-- PAGE PAIEMENT -->
+<div class="backgroundPaiement container bg-light d-md-flex align-items-center py-5">
+    <div class="card box2 shadow-sm w-100">
+        <div class="d-flex align-items-center justify-content-between p-md-5 p-4">
+            <span class="h5 fw-bold m-0">Méthodes de Paiement</span>
+        </div>
+
+        <ul class="nav nav-tabs mb-3 px-md-4 px-2">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" data-target="creditCardTab">Carte de Crédit</a>
+            </li>
+        </ul>
+
+        <!-- FORMULAIRE DE PAIEMENT -->
+        <div id="creditCardTab" class="tab-content active">
+            <form th:action="@{/commande/valider}" method="post">
+                <!-- CSRF Token si activé
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" /> -->
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex flex-column px-md-5 px-4 mb-4">
+                            <span>Carte de Crédit</span>
+                            <div class="inputWithIcon">
+                                <input class="form-control" type="text" placeholder="---- ---- ---- ----"
+                                       pattern="^\d{16}$"
+                                       required title="Numéro de carte valide requis">
+                                <span>
+                                    <img src="https://www.freepnglogos.com/uploads/mastercard-png/mastercard-logo-logok-15.png" alt="Mastercard" height="24">
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex flex-column ps-md-5 px-md-0 px-4 mb-4">
+                            <span>Date d'expiration</span>
+                            <div class="inputWithIcon">
+                                <input type="text" class="form-control" placeholder="MM/AA"
+                                       pattern="*"
+                                       required title="Format attendu : MM/AA (ex: 12/25)">
+                                <span class="fas fa-calendar-alt"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex flex-column pe-md-5 px-md-0 px-4 mb-4">
+                            <span>Code CVV</span>
+                            <div class="inputWithIcon">
+                                <input type="password" class="form-control" maxlength="4" placeholder="CVV"
+                                       pattern="*" required title="CVV requis (3 ou 4 chiffres)">
+                                <span class="fas fa-lock"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="d-flex flex-column px-md-5 px-4 mb-4">
+                            <span>Nom sur la carte</span>
+                            <div class="inputWithIcon">
+                                <input class="form-control" type="text" placeholder="Entrez votre nom" required>
+                                <span class="far fa-user"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 px-md-5 px-4 mt-3">
+                        <button type="submit" class="btn btn-primary w-100">Payer</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bouton flottant pour ouvrir le chat -->
+<button id="openChatBtn" class="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle" style="z-index: 1050;">
+    💬
+</button>
+
+<!-- Modal Ollama -->
+<div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="chatModalLabel">Discuter avec GreenBot, notre IA</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <div id="chatBox" style="max-height: 300px; overflow-y: auto;"></div>
+
+                <!-- Spinner de chargement (initialement caché) -->
+                <div id="loadingSpinner" class="text-center" style="display: none;">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
+
+                <div class="input-group mt-3">
+                    <input type="text" id="userMessage" class="form-control" placeholder="Écrivez votre message...">
+                    <button class="btn btn-success" id="sendMessage">Envoyer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Ouvrir la fenêtre modale
+    document.getElementById('openChatBtn').addEventListener('click', () => {
+        var chatModal = new bootstrap.Modal(document.getElementById('chatModal'));
+        chatModal.show();
+    });
+
+    // Envoyer le message à Ollama (backend proxy recommandé)
+    document.getElementById('sendMessage').addEventListener('click', async () => {
+        const userMsg = document.getElementById('userMessage').value;
+        if (!userMsg) return;
+
+        const chatBox = document.getElementById('chatBox');
+        chatBox.innerHTML += `<div class="mb-2"><strong>Vous :</strong> ${userMsg}</div>`;
+        document.getElementById('userMessage').value = '';
+
+        // Afficher le spinner de chargement
+        document.getElementById('loadingSpinner').style.display = 'block';
+
+        // Appel API à votre backend qui relaie à Ollama
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: userMsg })
+        });
+
+        const data = await response.json();
+
+        // Cacher le spinner de chargement
+        document.getElementById('loadingSpinner').style.display = 'none';
+
+        // Afficher la réponse de GreenBot (Ollama)
+        chatBox.innerHTML += `<div class="mb-2"><strong>GreenBot :</strong> ${data.reply}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+</script>
+
+<div class="gtranslate_wrapper"></div>
+
+<script>
+    window.gtranslateSettings = {
+        default_language: "fr",
+        languages: ["en", "fr", "es"],
+        wrapper_selector: ".gtranslate_wrapper",
+        detect_browser_language: true,
+        remember_language: true
+    };
+</script>
+
+<script src="https://cdn.gtranslate.net/widgets/latest/float.js" defer></script>
+
+</body>
+
+<!-- Script d'onglets -->
+<script>
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            this.classList.add('active');
+            const targetId = this.getAttribute('data-target');
+            document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+            document.getElementById(targetId).style.display = 'block';
+        });
+    });
+</script>
+
+</html>

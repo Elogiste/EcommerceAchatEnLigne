@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Paramètres</title>
+
+    <script>
+        // Appliquer la classe dark-mode le plus tôt possible
+        if (localStorage.getItem("darkModeActif") === "true") {
+            document.documentElement.classList.add("dark-mode");
+        }
+    </script>
+
+    <script src="/modeSombre.js" defer></script>
+
+<!--  <style>-->
+<!--    /* The switch - the box around the slider */-->
+<!--    .switch {-->
+<!--      font-size: 17px;-->
+<!--      position: relative;-->
+<!--      display: inline-block;-->
+<!--      width: 3.5em;-->
+<!--      height: 2em;-->
+<!--    }-->
+
+<!--    /* Hide default HTML checkbox */-->
+<!--    .switch input {-->
+<!--      opacity: 0;-->
+<!--      width: 0;-->
+<!--      height: 0;-->
+<!--    }-->
+
+<!--    /* The slider */-->
+<!--    .slider {-->
+<!--      position: absolute;-->
+<!--      cursor: pointer;-->
+<!--      top: 0;-->
+<!--      left: 0;-->
+<!--      right: 0;-->
+<!--      bottom: 0;-->
+<!--      background-color: #fff;-->
+<!--      border: 1px solid #adb5bd;-->
+<!--      transition: .4s;-->
+<!--      border-radius: 30px;-->
+<!--    }-->
+
+<!--    .slider:before {-->
+<!--      position: absolute;-->
+<!--      content: "";-->
+<!--      height: 1.4em;-->
+<!--      width: 1.4em;-->
+<!--      border-radius: 20px;-->
+<!--      left: 0.27em;-->
+<!--      bottom: 0.25em;-->
+<!--      background-color: #adb5bd;-->
+<!--      transition: .4s;-->
+<!--    }-->
+
+<!--    input:checked + .slider {-->
+<!--      background-color: #007bff;-->
+<!--      border: 1px solid #007bff;-->
+<!--    }-->
+
+<!--    input:focus + .slider {-->
+<!--      box-shadow: 0 0 1px #007bff;-->
+<!--    }-->
+
+<!--    input:checked + .slider:before {-->
+<!--      transform: translateX(1.4em);-->
+<!--      background-color: #fff;-->
+<!--    }-->
+<!--  </style>-->
+
+
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #212529;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .dark-mode {
+            background-color: #121212;
+            color: #e4e4e4;
+        }
+
+        a {
+            margin-bottom: 2rem;
+            color: #007bff;
+            text-decoration: none;
+            font-size: 1.1rem;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .switch {
+            font-size: 17px;
+            position: relative;
+            display: inline-block;
+            width: 3.5em;
+            height: 2em;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #dee2e6;
+            border: 1px solid #adb5bd;
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 1.4em;
+            width: 1.4em;
+            border-radius: 20px;
+            left: 0.27em;
+            bottom: 0.25em;
+            background-color: #adb5bd;
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: #007bff;
+            border: 1px solid #007bff;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #007bff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(1.4em);
+            background-color: #fff;
+        }
+
+        .parametres-section{
+            padding: 20px;
+        }
+        .parametres-section h2{
+            padding-bottom: 15px;
+        }
+
+        #span-ModeSombre{
+            padding-bottom: 15px;
+        }
+    </style>
+
+
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <span id="span-ModeSombre">Mode Clair/Mode Sombre</span>
+    <label class="switch">
+      <input type="checkbox" id="darkModeBouton">
+      <span class="slider"></span>
+    </label>
+
+
+    <h1>Préférences utilisateur</h1>
+
+    <div class="parametres-section">
+        <label for="tailleTexte">Taille du texte :</label>
+        <select id="tailleTexte">
+            <option value="14px">Petit</option>
+            <option value="16px">Normal</option>
+            <option value="18px">Grand</option>
+            <option value="20px">Très grand</option>
+        </select>
+    </div>
+
+    <div class="parametres-section">
+        <label>
+            <input type="checkbox" id="notifEmail">
+            Recevoir des notifications par e-mail
+        </label>
+    </div>
+
+    <div class="parametres-section">
+        <label for="fuseau">Fuseau horaire :</label>
+        <select id="fuseau">
+            <option value="UTC-5">UTC-5 (Québec)</option>
+            <option value="UTC+0">UTC+0 (Londres)</option>
+            <option value="UTC+1">UTC+1 (Paris)</option>
+            <option value="UTC+9">UTC+9 (Tokyo)</option>
+        </select>
+    </div>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Taille du texte
+            const tailleTexte = localStorage.getItem("tailleTexte");
+            const selectTaille = document.getElementById("tailleTexte");
+            if (tailleTexte) {
+                document.body.style.fontSize = tailleTexte;
+                if (selectTaille) selectTaille.value = tailleTexte;
+            }
+
+            if (selectTaille) {
+                selectTaille.addEventListener("change", () => {
+                    const valeur = selectTaille.value;
+                    document.body.style.fontSize = valeur;
+                    localStorage.setItem("tailleTexte", valeur);
+                });
+            }
+
+            // Notification email
+            const notifCheckbox = document.getElementById("notifEmail");
+            const savedNotif = localStorage.getItem("notifEmail");
+            if (notifCheckbox && savedNotif !== null) {
+                notifCheckbox.checked = savedNotif === "true";
+            }
+
+            if (notifCheckbox) {
+                notifCheckbox.addEventListener("change", () => {
+                    localStorage.setItem("notifEmail", notifCheckbox.checked);
+                });
+            }
+
+            // Fuseau horaire
+            const fuseauSelect = document.getElementById("fuseau");
+            const savedFuseau = localStorage.getItem("fuseauHoraire");
+            if (fuseauSelect && savedFuseau) {
+                fuseauSelect.value = savedFuseau;
+            }
+
+            if (fuseauSelect) {
+                fuseauSelect.addEventListener("change", () => {
+                    localStorage.setItem("fuseauHoraire", fuseauSelect.value);
+                });
+            }
+        });
+    </script>
+
+    <a th:href="@{/profil}">Appliquer</a>
+
+</body>
+</html>
+
+

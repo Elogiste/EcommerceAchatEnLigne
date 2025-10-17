@@ -1,0 +1,151 @@
+/* Global reset */
+
+.icon-white {color: white}
+.icon-silver {color: silver}
+.icon-green {color: green}
+.icon-dark {color: gray}
+.icon-red {color: rgb(204, 0, 0)}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+/* Navbar */
+.navbar {
+    background-color: #28a745;
+}
+
+.navbar-brand img {
+    height: 40px;
+}
+
+.navbar-nav .nav-link {
+    color: #fff !important;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #d4d4d4 !important;
+}
+
+/* Form Styles */
+.form-group label {
+    font-weight: bold;
+}
+
+.form-control {
+    border-radius: 0.25rem;
+    box-shadow: none;
+}
+
+input[type="email"],
+input[type="password"],
+input[type="text"],
+input[type="file"],
+input[type="checkbox"] {
+    border: 1px solid #ced4da;
+    padding: 10px;
+}
+
+input[type="submit"],
+input[type="button"] {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+input[type="submit"]:hover,
+input[type="button"]:hover {
+    background-color: #218838;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.error {
+    color: #ff0000;
+    font-weight: bold;
+    font-style: italic;
+}
+
+/* Modal */
+.modal-header {
+    background-color: #ffc107;
+    color: #fff;
+}
+
+.modal-footer {
+    background-color: #f1f1f1;
+}
+
+/* Footer */
+footer {
+    background-color: #28a745;
+    color: #fff;
+    padding: 1.5rem 0;
+}
+
+footer p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Container */
+.container-fluid {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.m-4 {
+    margin: 2rem;
+}
+
+.text-muted {
+    color: #6c757d;
+}
+
+/*.carousel-inner>.carousel-item>.images-carousel {
+
+}*/
+
+#carouselGreenPulse .carousel-item img{
+    height: 50vh;
+    overflow: scroll;
+}
+
+.carousel-item{
+    height: 400px;
+    width: 250px;
+}
+
+.imageProduits img{
+    min-width: 100px;
+    max-width: 300px;
+
+    min-height: 100px;
+    max-height: 180px;
+
+    object-fit: cover;
+}
+
+.dark-mode {
+    background: #000000;
+    color: #ffffff;
+}

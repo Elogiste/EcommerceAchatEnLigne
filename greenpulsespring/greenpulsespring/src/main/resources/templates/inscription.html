@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    // Appliquer la classe dark-mode le plus tôt possible
+    if (localStorage.getItem("darkModeActif") === "true") {
+      document.documentElement.classList.add("dark-mode");
+    }
+  </script>
+  <title>Inscription - Green Pulse</title>
+
+  <!-- Bootstrap 5 + Styles -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+
+  <!-- Scripts Bootstrap/jQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <style>
+    .error {
+      color: #ff0000;
+      font-style: italic;
+      font-weight: bold;
+    }
+
+
+
+     body {
+       background-color: #f8f9fa; /* fond clair de Bootstrap par défaut */
+     }
+
+    .dark-mode body {
+      background-color: #121212 !important;
+      color: #ffffff;
+    }
+
+
+    .dark-mode .card,
+    .dark-mode .list-group-item,
+    .dark-mode .navbar,
+    .dark-mode .footer,
+    .dark-mode .alert {
+      background-color: #1e1e1e;
+      color: #ffffff;
+      border-color: #333;
+    }
+
+    .dark-mode a {
+      color: #80cbc4;
+    }
+
+    .dark-mode .btn-secondary {
+      background-color: #444;
+      border-color: #555;
+    }
+
+    .border{
+      background-color: #f1f1f1;
+      color: #000000;
+    }
+    .dark-mode .border{
+      background-color: #1e1e1e !important;
+      color: #f1f1f1;
+    }
+
+    .form-group{
+      padding-top: 5px;
+    }
+
+  </style>
+</head>
+
+<body class="bg-light">
+
+<div class="container-fluid">
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+    <a class="navbar-brand" th:href="@{/}">
+      <img src="/images/greenpulseexport.jpeg" class="logo" alt="Green Pulse" height="40">
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" th:href="@{/}">Accueil</a>
+        </li>
+
+        <!-- Lien vers le Dashboard pour les utilisateurs connectés -->
+        <li class="nav-item" th:if="${utilisateurConnecte != null}">
+          <a class="nav-link" th:href="@{/dashboard}">Tableau de bord</a>
+        </li>
+
+        <!-- Utilisateur non connecté -->
+        <li class="nav-item" th:if="${utilisateurConnecte == null}">
+          <a class="nav-link" th:href="@{/connexion}">Connexion</a>
+        </li>
+        <li class="nav-item" th:if="${utilisateurConnecte == null}">
+          <a class="nav-link" th:href="@{/utilisateurs/new}">Inscription</a>
+        </li>
+
+        <!-- Utilisateur connecté -->
+        <li class="nav-item" th:if="${utilisateurConnecte != null}">
+          <a class="nav-link fw-bold text-white" th:href="@{/profil}">
+            <span th:text="${utilisateurConnecte.prenom}">Mon Profil</span>
+          </a>
+        </li>
+
+        <!-- Lien vers la liste des produits pour Acheteur et Producteur -->
+        <li class="nav-item" th:if="${utilisateurConnecte != null}">
+          <a class="nav-link" th:href="@{/produits}">Liste des Produits</a>
+        </li>
+
+        <!-- Lien vers le panier visible pour les acheteurs -->
+        <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Acheteur'}">
+          <a class="nav-link" th:href="@{/ajouterAuPanier/Produit}">Mon Panier</a>
+        </li>
+
+        <!-- Administrateur -->
+        <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Administrateur'}">
+          <a class="nav-link" th:href="@{/utilisateurs}">Utilisateurs</a>
+        </li>
+
+        <!-- Lien Ajouter un Produit visible uniquement pour les producteurs -->
+        <li class="nav-item" th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Producteur'}">
+          <a class="nav-link" href="/ajouterProduit">Ajouter un Produit</a>
+        </li>
+        <!-- Lien Messagerie-->
+        <li class="nav-item" th:if="${utilisateurConnecte != null}">
+          <a class="nav-link" th:href="@{/EnvoyerMessages}">Messagerie</a>
+        </li>
+
+        <!-- Déconnexion -->
+        <li class="nav-item" th:if="${utilisateurConnecte != null}">
+          <a class="nav-link" th:href="@{/deconnexion}">Déconnexion</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- TITRE -->
+  <div class="text-center my-5">
+    <h2>Inscription d’un nouvel utilisateur</h2>
+  </div>
+
+  <!-- FORMULAIRE -->
+  <form th:action="@{/utilisateurs/save}" method="post" th:object="${utilisateur}" enctype="multipart/form-data"
+        style="max-width: 700px; margin: 0 auto" onsubmit="return checkEmailUnique(this);">
+    <input type="hidden" th:field="*{id}" />
+    <div class="border border-secondary rounded p-4 bg-white shadow-sm">
+
+      <!-- PRENOM -->
+      <div class="form-group row">
+        <label class="col-sm-4 col-form-label">Prénom :</label>
+        <div class="col-sm-8">
+          <input type="text" class="form-control" th:field="*{prenom}" />
+          <span class="error" th:if="${#fields.hasErrors('prenom')}" th:errors="*{prenom}"></span>
+        </div>
+      </div>
+
+      <!-- NOM -->
+      <div class="form-group row">
+        <label class="col-sm-4 col-form-label">Nom ou celui de votre entreprise :</label>
+        <div class="col-sm-8">
+          <input type="text" class="form-control" th:field="*{nom}" />
+          <span class="error" th:if="${#fields.hasErrors('nom')}" th:errors="*{nom}"></span>
+        </div>
+      </div>
+
+      <!-- EMAIL -->
+      <div class="form-group row">
+        <label class="col-sm-4 col-form-label">E-mail :</label>
+        <div class="col-sm-8">
+          <input type="email" class="form-control" id="email" th:field="*{email}" required minlength="8" maxlength="128" />
+          <span class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+        </div>
+      </div>
+
+      <!-- MOT DE PASSE -->
+      <div class="form-group row">
+        <label class="col-sm-4 col-form-label">Mot de passe :</label>
+        <div class="col-sm-8">
+          <input type="password" class="form-control" th:field="*{password}" />
+          <span class="error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+        </div>
+      </div>
+
+      <!-- ROLES (dropdown) -->
+      <div class="form-group row">
+        <label class="col-sm-4 col-form-label">Rôle :</label>
+        <div class="col-sm-8">
+          <select class="form-control" th:field="*{role}">
+            <option value="" selected>Choisir un rôle</option>
+            <th:block th:each="role : ${listRoles}">
+              <!-- L'admin voit tous les rôles -->
+              <option th:if="${utilisateurConnecte != null and utilisateurConnecte.role.nom == 'Administrateur'}"
+                      th:value="${role.id}" th:text="${role.nom}"></option>
+
+              <!-- Un utilisateur non connecté voit seulement Acheteur et Producteur -->
+              <option th:if="${utilisateurConnecte == null and (role.nom == 'Acheteur' or role.nom == 'Producteur')}"
+                      th:value="${role.id}" th:text="${role.nom}"></option>
+            </th:block>
+          </select>
+          <span class="error" th:if="${#fields.hasErrors('role')}" th:errors="*{role}"></span>
+        </div>
+      </div>
+
+
+      <!-- PHOTO -->
+      <div class="form-group row">
+        <label class="col-sm-4 col-form-label">Photo :</label>
+        <div class="col-sm-8">
+          <!-- Bouton de téléchargement d'image stylisé -->
+          <div class="custom-file">
+            <input type="file" class="custom-file-input" id="fileImage" name="fileImage" accept="image/*">
+            <label class="custom-file-label" for="fileImage">Choisissez une image</label>
+          </div>
+
+          <!-- Message d'instruction -->
+          <small class="form-text text-muted mt-1">
+            Nommez votre photo comme suit : <strong>"prenomnom"</strong> ou <strong>"nomprenom"</strong> pour qu'elle soit unique et liée à votre compte.
+          </small>
+
+          <!-- Affichage des erreurs -->
+          <span class="error text-danger" th:if="${#fields.hasErrors('photo')}" th:errors="*{photo}"></span>
+        </div>
+      </div>
+
+      <!-- BOUTONS -->
+      <div class="text-center">
+        <input type="submit" value="Enregistrer" class="btn btn-primary m-3" />
+        <input th:action="@{/utilisateurs/save}" type="button" value="Annuler" class="btn btn-secondary" id="buttonCancel" />
+      </div>
+    </div>
+  </form>
+  <div class="gtranslate_wrapper"></div>
+
+  <script>
+    window.gtranslateSettings = {
+      default_language: "fr",
+      languages: ["en", "fr", "it", "es", "ja"],
+      wrapper_selector: ".gtranslate_wrapper",
+      detect_browser_language: true,
+      remember_language: true
+    };
+  </script>
+  <script src="https://cdn.gtranslate.net/widgets/latest/float.js" defer></script>
+  <!-- FOOTER -->
+  <!-- FOOTER -->
+  <footer class="footer text-center bg-dark text-white py-4">
+    <div class="container">
+      <p>&copy; 2025 Green Pulse | Conçu pour un marché plus équitable</p>
+      <p>Projet académique – Collège de Rosemont – Prof. Dini Ahamada</p>
+      <p>Kossi Mawuli Eloge Assiobo – Lucas Bidault-Meresse – Lleyton Habimana</p>
+    </div>
+  </footer>
+
+  <!-- MODAL -->
+  <div class="modal fade text-center" id="modalDialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-warning">
+          <h4 class="modal-title" id="modalTitle">Avertissement</h4>
+          <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <span id="modalBody"></span>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Fermer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT JS -->
+  <script>
+    function checkEmailUnique(form) {
+      $.ajax({
+        type: 'POST',
+        url: '[[@{/utilisateurs/check_email}]]',
+        data: {
+          email: $("#email").val(),
+          id: $("#id").val()
+        },
+        success: function (data) {
+          if (data === 'OK') {
+            form.submit();
+          } else {
+            showModalDialog("Avertissement", "L'adresse e-mail " + $("#email").val() + " est déjà utilisée.");
+          }
+        }
+      });
+      return false;
+    }
+
+    function showModalDialog(title, message) {
+      $("#modalTitle").text(title);
+      $("#modalBody").text(message);
+      $("#modalDialog").modal();
+    }
+
+    $("#buttonCancel").on("click", function () {
+      window.location = "[[@{/}]]";
+    });
+  </script>
+
+</div>
+
+<!-- Bouton flottant pour ouvrir le chat -->
+<button id="openChatBtn" class="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle" style="z-index: 1050;">
+  💬
+</button>
+
+<!-- Modal Ollama -->
+<div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="chatModalLabel">Discuter avec GreenBot, notre IA</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body">
+        <div id="chatBox" style="max-height: 300px; overflow-y: auto;"></div>
+
+        <!-- Spinner de chargement (initialement caché) -->
+        <div id="loadingSpinner" class="text-center" style="display: none;">
+          <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden">Chargement...</span>
+          </div>
+        </div>
+
+        <div class="input-group mt-3">
+          <input type="text" id="userMessage" class="form-control" placeholder="Écrivez votre message...">
+          <button class="btn btn-success" id="sendMessage">Envoyer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Ouvrir la fenêtre modale
+  document.getElementById('openChatBtn').addEventListener('click', () => {
+    var chatModal = new bootstrap.Modal(document.getElementById('chatModal'));
+    chatModal.show();
+  });
+
+  // Envoyer le message à Ollama (backend proxy recommandé)
+  document.getElementById('sendMessage').addEventListener('click', async () => {
+    const userMsg = document.getElementById('userMessage').value;
+    if (!userMsg) return;
+
+    const chatBox = document.getElementById('chatBox');
+    chatBox.innerHTML += `<div class="mb-2"><strong>Vous :</strong> ${userMsg}</div>`;
+    document.getElementById('userMessage').value = '';
+
+    // Afficher le spinner de chargement
+    document.getElementById('loadingSpinner').style.display = 'block';
+
+    // Appel API à votre backend qui relaie à Ollama
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: userMsg })
+    });
+
+    const data = await response.json();
+
+    // Cacher le spinner de chargement
+    document.getElementById('loadingSpinner').style.display = 'none';
+
+    // Afficher la réponse de GreenBot (Ollama)
+    chatBox.innerHTML += `<div class="mb-2"><strong>GreenBot :</strong> ${data.reply}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+</script>
+
+<div class="gtranslate_wrapper"></div>
+
+<script>
+  window.gtranslateSettings = {
+    default_language: "fr",
+    languages: ["en", "fr", "es"],
+    wrapper_selector: ".gtranslate_wrapper",
+    detect_browser_language: true,
+    remember_language: true
+  };
+</script>
+
+<script src="https://cdn.gtranslate.net/widgets/latest/float.js" defer></script>
+
+</body>
+</html>
