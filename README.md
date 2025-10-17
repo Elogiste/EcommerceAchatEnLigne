@@ -1,6 +1,6 @@
 # Green Pulse - Plateforme de Commerce de Grains en Ligne
 
-## Version 2 : Développement avec Spring Boot
+## Développement avec Spring Boot
 
 Bienvenue dans le dépôt Git du projet **Green Pulse**, une plateforme web destinée à connecter directement les producteurs de légumineuses avec les acheteurs, en automatisant les processus de mise en relation et de transaction.
 
@@ -41,7 +41,7 @@ Les technologies suivantes :
 - Réception et validation des offres d’achat.
 - Suivi des ventes via un tableau de bord personnalisé.
 
-### 🛒 Acheteurs
+###  Acheteurs
 - Création de compte et connexion sécurisée.
 - Recherche de grains disponibles avec filtres (type, prix, localisation...).
 - Génération de demandes d'achat.
@@ -54,7 +54,7 @@ Les technologies suivantes :
 
 ---
 
-## 🗂️ Structure du Projet
+## Structure du Projet
 
 green-pulse/
 ├── src/
@@ -118,11 +118,12 @@ spring.jpa.hibernate.ddl-auto=update
 
 ### Auteurs / Équipe
 
-Chef de projet : Eloge Assiobo (@elogiste)
+Chef de projet : Eloge Assiobo ( @elogiste )
 
-Développeurs :  * Eloge Assiobo
-                * Lucas Bidault-Meresse
-                * Lleyton Habimana
+Développeurs : 
+- Eloge Assiobo
+- Lucas Bidault-Meresse
+- Lleyton Habimana
 
 Établissement : Cégep de Rosemont
 
